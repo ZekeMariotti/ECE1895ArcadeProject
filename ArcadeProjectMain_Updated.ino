@@ -33,7 +33,7 @@ int joystickRightPin = 7;
 int joystickDownPin = 8;
 
 // Pins for two input buttons and LEDs
-int buttonOnePin = 10;
+int buttonOnePin = 12;
 int buttonTwoPin = 3;
 
 // Pins for coin slot button and LED
@@ -61,7 +61,7 @@ void setup() {
   pinMode(startButtonPin, INPUT);
 
 
-  pinMode(10,OUTPUT);
+  //pinMode(10,OUTPUT);
 
   // Use analog input to generate random noise to choose a correct input
   randomSeed(analogRead(0));
@@ -244,3 +244,4 @@ void timerSetup() {
 ISR(TIMER1_COMPA_vect) {
   Serial.println(millis());
 }
+
