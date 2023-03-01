@@ -25,7 +25,7 @@ bool buttonTwoInput = false;
 bool coinSlotButtonInput = false;
 bool startButtonInput = false;
 
-// Pins:
+// Pins: 
 // Pins for joystick 
 int joystickLeftPin = 5;
 int joystickUpPin = 6;
