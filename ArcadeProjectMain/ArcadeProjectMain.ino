@@ -73,7 +73,7 @@ void loop() {
   // Read input pins
   readInputs();
   //lcd.setCursor(0, 0);
-  lcd.print("Press Start              ");
+  //lcd.print("Press Start              ");
 
   // Start Button Pressed
   if (startButtonInput == true) {
