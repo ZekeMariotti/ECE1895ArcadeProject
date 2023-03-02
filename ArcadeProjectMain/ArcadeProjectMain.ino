@@ -46,7 +46,7 @@ int startButtonPin = 9;
 void setup() {
   lcd.init();
   lcd.backlight();  
-  lcd.setCursor(0, 1);
+  //lcd.setCursor(0, 1);
   Serial.begin(9600);
 
   // pinMode Setups
@@ -72,7 +72,7 @@ void setup() {
 void loop() {
   // Read input pins
   readInputs();
-  lcd.setCursor(0, 0);
+  //lcd.setCursor(0, 0);
   lcd.print("Press Start              ");
 
   // Start Button Pressed
@@ -83,7 +83,7 @@ void loop() {
     success = true;
     roundFailure = false;
     timeInterval = 3500;
-    lcd.setCursor(0, 0);
+    //lcd.setCursor(0, 0);
     delay(2000);    
 
     // Main game loop after pressing start button
@@ -100,6 +100,7 @@ void loop() {
       lcd.print("Correct Input: ");
       lcd.setCursor(0, 1);
       lcd.print(displayCorrectInput(correctInput));
+      lcd.setCursor(0, 0);
       success = false;
 
       // Loop for each round
@@ -116,7 +117,6 @@ void loop() {
 
       if (success) {
         lcd.clear();
-        lcd.setCursor(0, 0);
         lcd.print("Correct!");
         score++;
         //timeInterval -= 150;
