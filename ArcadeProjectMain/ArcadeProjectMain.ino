@@ -11,6 +11,7 @@ int timeInterval = 0;
 int correctInput = 0;
 bool success = true;
 bool roundFailure = false;
+bool gameStartMessage = false;
 
 // Timer variables
 unsigned long previousTime = 0, currentTime = 0;
@@ -46,7 +47,6 @@ int startButtonPin = 9;
 void setup() {
   lcd.init();
   lcd.backlight();  
-  //lcd.setCursor(0, 1);
   Serial.begin(9600);
 
   // pinMode Setups
@@ -72,8 +72,24 @@ void setup() {
 void loop() {
   // Read input pins
   readInputs();
-  //lcd.setCursor(0, 0);
-  //lcd.print("Press Start              ");
+  
+  if (gameStartMessage == false){
+    if(millis()-previousTime>750){
+      lcd.print("Press Start");
+      lcd.setCursor(0, 1);
+      lcd.print("to Begin");
+      lcd.setCursor(0, 0); 
+      gameStartMessage = true;
+      previousTime = millis();
+    }
+  }
+  else{
+    if(millis()-previousTime>750){
+      lcd.clear();
+      gameStartMessage = false;
+      previousTime = millis();
+    }
+  }
 
   // Start Button Pressed
   if (startButtonInput == true) {
@@ -82,12 +98,11 @@ void loop() {
     score = 0;
     success = true;
     roundFailure = false;
-    timeInterval = 3500;
-    //lcd.setCursor(0, 0);
+    timeInterval = 5000;
     delay(2000);    
 
     // Main game loop after pressing start button
-    while (success == true && score < 99) {
+    while (success == true && score <= 99) {
       lcd.clear();
       readInputs();
 
@@ -106,7 +121,6 @@ void loop() {
       // Loop for each round
       while (currentTime - previousTime < timeInterval) {
         readInputs();
-
         roundFailure = testInputs(correctInput);
 
         if (roundFailure || success)
@@ -118,18 +132,42 @@ void loop() {
       if (success) {
         lcd.clear();
         lcd.print("Correct!");
-        score++;
-        //timeInterval -= 150;
-      } else {
+        delay(1000);
+        score+=1;
+        
+        if (score%20 == 0){
+            lcd.clear();
+            lcd.print("Speeding up...");
+        	timeInterval -= 750;
+          	delay(1500);
+        }
+      } 
+      else {
         lcd.clear();
         lcd.print("Wrong!");
+        delay(1000);
       }
       delay(1000);
       lcd.clear();
     }
-    lcd.print("Score: " + String(score));
+    // Game over
+    if(score > 99){
+      lcd.print("You Win!");
+      lcd.setCursor(0, 1);
+      lcd.print("Score: " + String(score));
+      lcd.setCursor(0, 0);
+      delay(2500);
+    }
+    else{
+      lcd.print("Game Over");
+      lcd.setCursor(0, 1);
+      lcd.print("Score: " + String(score));
+      lcd.setCursor(0, 0);
+      delay(2500);
+    }
     delay(2500);
     lcd.clear();
+    gameStartMessage = false;
   }
 }
 
