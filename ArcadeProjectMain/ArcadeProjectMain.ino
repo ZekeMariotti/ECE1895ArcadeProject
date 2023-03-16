@@ -1,8 +1,14 @@
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include "DFRobotDFPlayerMini.h"
+#include "SoftwareSerial.h"
 
 // Set the LCD address to 0x27 for a 16 chars and 2 line display
 LiquidCrystal_I2C lcd(32, 16, 2);
+
+// DFPlayer Setup
+SoftwareSerial SoftwareSerial(10, 11); // RX, TX
+DFRobotDFPlayerMini DFPlayer;
 
 // Global variables:
 // Game variables
@@ -15,6 +21,8 @@ bool gameStartMessage = false;
 
 // Timer variables
 unsigned long previousTime = 0, currentTime = 0;
+
+
 
 // Inputs
 bool joystickLeftInput = false;
@@ -45,9 +53,20 @@ int startButtonPin = 9;
 
 // Setup default values for the board
 void setup() {
+  // lcd setup
   lcd.init();
-  lcd.backlight();  
+  lcd.backlight(); 
+
+  // DFPlayer Setup
+  SoftwareSerial.begin(9600);
   Serial.begin(9600);
+
+  if (!DFPlayer.begin(SoftwareSerial)) {
+    lcd.print("DFPlayer Error");
+    while(true);
+  }
+
+  DFPlayer.volume(10);
 
   // pinMode Setups
   pinMode(joystickLeftPin, INPUT);
@@ -116,6 +135,7 @@ void loop() {
       lcd.setCursor(0, 1);
       lcd.print(displayCorrectInput(correctInput));
       lcd.setCursor(0, 0);
+      DFPlayer.play(correctInput+1); // audio files should be in order, ex: file 1 -> Red Button Sound
       success = false;
 
       // Loop for each round
