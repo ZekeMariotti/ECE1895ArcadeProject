@@ -1,3 +1,15 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+#include "DFRobotDFPlayerMini.h"
+#include "SoftwareSerial.h"
+
+// Set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// DFPlayer Setup
+SoftwareSerial SoftwareSerial(10, 11); // RX, TX
+DFRobotDFPlayerMini DFPlayer;
+
 // Global variables:
 // Game variables
 int score = 0;
@@ -5,9 +17,12 @@ int timeInterval = 0;
 int correctInput = 0;
 bool success = true;
 bool roundFailure = false;
+bool gameStartMessage = false;
 
 // Timer variables
 unsigned long previousTime = 0, currentTime = 0;
+
+
 
 // Inputs
 bool joystickLeftInput = false;
@@ -19,7 +34,7 @@ bool buttonTwoInput = false;
 bool coinSlotButtonInput = false;
 bool startButtonInput = false;
 
-// Pins:
+// Pins: 
 // Pins for joystick 
 int joystickLeftPin = 5;
 int joystickUpPin = 6;
@@ -27,7 +42,7 @@ int joystickRightPin = 7;
 int joystickDownPin = 8;
 
 // Pins for two input buttons and LEDs
-int buttonOnePin = 2;
+int buttonOnePin = 12;
 int buttonTwoPin = 3;
 
 // Pins for coin slot button and LED
@@ -38,9 +53,24 @@ int startButtonPin = 9;
 
 // Setup default values for the board
 void setup() {
+  // lcd setup
+  lcd.init();
+  lcd.backlight(); 
+
+  // DFPlayer Setup
+  SoftwareSerial.begin(9600);
   Serial.begin(9600);
-  // TODO: LCD setup
-  int lcdSetup = NULL;
+
+  lcd.print("Loading Game...");
+  delay(5000);
+  lcd.clear();
+
+  if (!DFPlayer.begin(SoftwareSerial)) {
+    lcd.print("DFPlayer Error");
+    while(true);
+  }
+
+  DFPlayer.volume(25);
 
   // pinMode Setups
   pinMode(joystickLeftPin, INPUT);
@@ -54,43 +84,67 @@ void setup() {
   pinMode(coinSlotButtonPin, INPUT);
   pinMode(startButtonPin, INPUT);
 
+
+  //pinMode(10,OUTPUT);
+
   // Use analog input to generate random noise to choose a correct input
   randomSeed(analogRead(0));
-
-  //timerSetup();
 }
 
 // Main Loop
 void loop() {
   // Read input pins
   readInputs();
+  
+  if (gameStartMessage == false){
+    if(millis()-previousTime>750){
+      lcd.print("Press Start");
+      lcd.setCursor(0, 1);
+      lcd.print("to Begin");
+      lcd.setCursor(0, 0); 
+      gameStartMessage = true;
+      previousTime = millis();
+    }
+  }
+  else{
+    if(millis()-previousTime>750){
+      lcd.clear();
+      gameStartMessage = false;
+      previousTime = millis();
+    }
+  }
 
   // Start Button Pressed
   if (startButtonInput == true) {
+    lcd.clear();
+    lcd.print("Game Started");
     score = 0;
     success = true;
     roundFailure = false;
-    timeInterval = 3500;
-    Serial.println("Start");
+    timeInterval = 5000;
+    delay(2000);    
 
     // Main game loop after pressing start button
-    while (success == true && score < 99) {
+    while (success == true && score <= 99) {
+      lcd.clear();
       readInputs();
 
       // Choose and display the next correct input
-      //correctInput = random(6);
-      correctInput = 0;
+      correctInput = random(6);
 
       // Reset time interval
       previousTime = millis();
       currentTime = millis();
-      Serial.println("Correct Input: " + displayCorrectInput(correctInput));
+      lcd.print("Correct Input: ");
+      lcd.setCursor(0, 1);
+      lcd.print(displayCorrectInput(correctInput));
+      lcd.setCursor(0, 0);
+      DFPlayer.play(correctInput+1); // audio files should be in order, ex: file 1 -> Red Button Sound
       success = false;
 
       // Loop for each round
       while (currentTime - previousTime < timeInterval) {
         readInputs();
-
         roundFailure = testInputs(correctInput);
 
         if (roundFailure || success)
@@ -100,15 +154,44 @@ void loop() {
       }
 
       if (success) {
-        Serial.println("Correct!");
-        score++;
-        //timeInterval -= 150;
-      } else {
-        Serial.println("Wrong!");
+        lcd.clear();
+        lcd.print("Correct!");
+        delay(1000);
+        score+=1;
+        
+        if (score%20 == 0){
+            lcd.clear();
+            lcd.print("Speeding up...");
+        	timeInterval -= 750;
+          	delay(1500);
+        }
+      } 
+      else {
+        lcd.clear();
+        lcd.print("Wrong!");
+        delay(1000);
       }
       delay(1000);
+      lcd.clear();
     }
-    Serial.println("Score: " + String(score));
+    // Game over
+    if(score > 99){
+      lcd.print("You Win!");
+      lcd.setCursor(0, 1);
+      lcd.print("Score: " + String(score));
+      lcd.setCursor(0, 0);
+      delay(2500);
+    }
+    else{
+      lcd.print("Game Over");
+      lcd.setCursor(0, 1);
+      lcd.print("Score: " + String(score));
+      lcd.setCursor(0, 0);
+      delay(2500);
+    }
+    delay(2500);
+    lcd.clear();
+    gameStartMessage = false;
   }
 }
 
@@ -168,25 +251,25 @@ bool testInputs(int correctInput) {
 String displayCorrectInput(int correctInput) {
   switch (correctInput) {
     case 0:
-      return "Press Button One";
+      return "Red Button";
       break;
     case 1:
-      return "Press Button Two";
+      return "Green Button";
       break;
     case 2:
-      return "Insert Coin ";
+      return "Coin";
       break;
     case 3:
-      return "Move Joystick Left";
+      return "Joystick Left";
       break;
     case 4:
-      return "Move Joystick Up";
+      return "Joystick Up";
       break;
     case 5:
-      return "Move Joystick Right";
+      return "Joystick Right";
       break;
     case 6:
-      return "Move Joystick Down";
+      return "Joystick Down";
       break;
   }
   return "";
