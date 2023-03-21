@@ -7,12 +7,15 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // DFPlayer Setup
+// Audio files 1-7 correspond to correct inputs 0-6
+// File 8 is for game started, file 9 is for game win, file 10 is for game over
 SoftwareSerial SoftwareSerial(10, 11); // RX, TX
 DFRobotDFPlayerMini DFPlayer;
 
 // Global variables:
 // Game variables
 int score = 0;
+int scoreMultiplier = 1;
 int timeInterval = 0;
 int correctInput = 0;
 bool success = true;
@@ -62,13 +65,19 @@ void setup() {
   Serial.begin(9600);
 
   lcd.print("Loading Game...");
-  delay(5000);
-  lcd.clear();
+  delay(1000);
+  currentTime = millis();
 
-  if (!DFPlayer.begin(SoftwareSerial)) {
-    lcd.print("DFPlayer Error");
-    while(true);
+  while (!DFPlayer.begin(SoftwareSerial)) {
+    delay(1000);
+
+    if(millis() - currentTime > 10000){
+      lcd.print("DFPlayer Error");
+      while(true);
+    }
   }
+  
+  lcd.clear();
 
   DFPlayer.volume(25);
 
@@ -95,6 +104,14 @@ void setup() {
 void loop() {
   // Read input pins
   readInputs();
+
+  if(joystickUpInput && buttonOneInput){
+    scoreMultiplier = 5;
+  }
+
+  if(joystickDownInput && buttonTwoInput){
+    scoreMultiplier = 1;
+  }
   
   if (gameStartMessage == false){
     if(millis()-previousTime>750){
@@ -118,6 +135,7 @@ void loop() {
   if (startButtonInput == true) {
     lcd.clear();
     lcd.print("Game Started");
+    DFPlayer.play(8);
     score = 0;
     success = true;
     roundFailure = false;
@@ -157,12 +175,12 @@ void loop() {
         lcd.clear();
         lcd.print("Correct!");
         delay(1000);
-        score+=1;
+        score+=1*scoreMultiplier;
         
-        if (score%20 == 0){
-            lcd.clear();
+        if (score%20 == 0 && score < 100){
+            lcd.clear();            
             lcd.print("Speeding up...");
-        	timeInterval -= 750;
+        	  timeInterval -= 750;
           	delay(1500);
         }
       } 
@@ -177,6 +195,7 @@ void loop() {
     // Game over
     if(score > 99){
       lcd.print("You Win!");
+      DFPlayer.play(9);      
       lcd.setCursor(0, 1);
       lcd.print("Score: " + String(score));
       lcd.setCursor(0, 0);
@@ -184,6 +203,7 @@ void loop() {
     }
     else{
       lcd.print("Game Over");
+      DFPlayer.play(10);
       lcd.setCursor(0, 1);
       lcd.print("Score: " + String(score));
       lcd.setCursor(0, 0);
@@ -257,7 +277,7 @@ String displayCorrectInput(int correctInput) {
       return "Green Button";
       break;
     case 2:
-      return "Coin";
+      return "Insert Coin";
       break;
     case 3:
       return "Joystick Left";
