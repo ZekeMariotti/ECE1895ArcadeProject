@@ -148,7 +148,7 @@ void loop() {
       readInputs();
 
       // Choose and display the next correct input
-      correctInput = random(6);
+      correctInput = random(7);
 
       // Reset time interval
       previousTime = millis();
