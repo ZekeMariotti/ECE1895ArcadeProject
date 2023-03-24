@@ -3,4 +3,6 @@ Zeke Mariotti
 Aiden Seo
 Nate Stofesky
 
-Link for the audio:  https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299
+Hardware directory includes all files for the hardware (gerber files, circuit schematic, etc.)
+Software directory includes all files for the software (code for the game, sound files)
+Enclosure directory includes all files for the enclosure (CAD model)
